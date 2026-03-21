@@ -7,7 +7,10 @@ fall back to file-based input.
 
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
+
+from config import CORRECTIONS_ARCHIVE_DIR, CORRECTIONS_DIR, NOTES_ARCHIVE_DIR, NOTES_DIR, TIMESTAMP_FORMAT
 
 
 def fetch_notes_from_file(filepath: str) -> list[str]:
@@ -67,6 +70,51 @@ def parse_blocks_response(response: dict | list) -> list[str]:
     return notes
 
 
+def save_notes(notes: list[str]) -> tuple[Path, Path]:
+    """Save fetched notes to latest.txt and a timestamped archive copy.
+
+    Returns (latest_path, archive_path).
+    """
+    NOTES_DIR.mkdir(parents=True, exist_ok=True)
+    NOTES_ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
+
+    content = "\n".join(notes) + "\n"
+    ts = datetime.now().strftime(TIMESTAMP_FORMAT)
+
+    latest_path = NOTES_DIR / "latest_notes.txt"
+    archive_path = NOTES_ARCHIVE_DIR / f"{ts}_notes.txt"
+
+    latest_path.write_text(content, encoding="utf-8")
+    archive_path.write_text(content, encoding="utf-8")
+
+    print(f"Notes saved → {latest_path}")
+    print(f"Notes archived → {archive_path}")
+
+    return latest_path, archive_path
+
+
+def save_corrections(corrections: list[dict], ts: str) -> tuple[Path, Path]:
+    """Save corrections to latest_corrections.json and a timestamped archive copy.
+
+    Returns (latest_path, archive_path).
+    """
+    CORRECTIONS_DIR.mkdir(parents=True, exist_ok=True)
+    CORRECTIONS_ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
+
+    content = json.dumps(corrections, indent=2, ensure_ascii=False)
+
+    latest_path = CORRECTIONS_DIR / "latest_corrections.json"
+    archive_path = CORRECTIONS_ARCHIVE_DIR / f"{ts}_corrections.json"
+
+    latest_path.write_text(content, encoding="utf-8")
+    archive_path.write_text(content, encoding="utf-8")
+
+    print(f"Corrections saved → {latest_path}")
+    print(f"Corrections archived → {archive_path}")
+
+    return latest_path, archive_path
+
+
 def save_corrections_for_writeback(corrections: list[dict], output_path: str) -> None:
     """Save corrections JSON for later write-back to Craft."""
     Path(output_path).write_text(
@@ -82,7 +130,7 @@ def save_corrections_for_writeback(corrections: list[dict], output_path: str) ->
 #    blocks_get(date="today", format="json")
 #
 # 2. Search for a document by name:
-#    documents_search(include="Daily Notes")
+#    documents_search(include="Dictated Notes")
 #
 # 3. Get blocks from a specific document:
 #    blocks_get(id=document_id, format="json")

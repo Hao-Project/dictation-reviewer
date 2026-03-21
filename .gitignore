@@ -5,3 +5,5 @@ __pycache__/
 *.html
 !sample_*.html
 .env
+notes/
+corrections/

@@ -5,7 +5,7 @@ from datetime import datetime
 from pathlib import Path
 
 # Default document name to fetch from Craft
-DEFAULT_DOCUMENT = "Daily Notes"
+DEFAULT_DOCUMENT = "Dictated Notes"
 
 # Default output directory
 DEFAULT_OUTPUT_DIR = Path.cwd()
@@ -18,6 +18,14 @@ CUSTOM_DICTIONARY_PATH = Path(__file__).parent / "custom_dictionary.json"
 
 # Cache directory for API responses
 CACHE_DIR = Path(__file__).parent / ".cache"
+
+# Notes storage directories
+NOTES_DIR = Path(__file__).parent / "notes"
+NOTES_ARCHIVE_DIR = NOTES_DIR / "archive"
+
+# Corrections storage directories
+CORRECTIONS_DIR = Path(__file__).parent / "corrections"
+CORRECTIONS_ARCHIVE_DIR = CORRECTIONS_DIR / "archive"
 
 # Correction levels
 CORRECTION_LEVELS = ["minimal", "light", "polish"]

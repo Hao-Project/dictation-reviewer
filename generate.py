@@ -6,16 +6,15 @@ an interactive HTML review page.
 """
 
 import argparse
-import json
 import subprocess
 import sys
 import webbrowser
 from datetime import datetime
 from pathlib import Path
 
-from config import DEFAULT_DOCUMENT, DEFAULT_MODEL, DEFAULT_OUTPUT_DIR, default_output_filename
+from config import DEFAULT_DOCUMENT, DEFAULT_MODEL, DEFAULT_OUTPUT_DIR, TIMESTAMP_FORMAT, default_output_filename
 from corrections import generate_corrections
-from craft_client import fetch_notes_from_file, fetch_notes_from_stdin
+from craft_client import fetch_notes_from_file, fetch_notes_from_stdin, save_corrections, save_notes
 from template import build_html
 
 
@@ -49,10 +48,6 @@ def parse_args() -> argparse.Namespace:
     corr_group.add_argument(
         "--corrections-file", "-c",
         help="Load pre-generated corrections JSON (skip AI)",
-    )
-    corr_group.add_argument(
-        "--save-corrections",
-        help="Save generated corrections to JSON for reuse",
     )
     corr_group.add_argument(
         "--book-title",
@@ -189,6 +184,11 @@ def main() -> None:
     # Fetch notes
     notes = fetch_notes(args)
 
+    # Save notes (latest + timestamped archive) when sourced from Craft or file
+    ts = datetime.now().strftime(TIMESTAMP_FORMAT)
+    if not args.corrections_file:
+        save_notes(notes)
+
     # Generate or load corrections
     corrections = generate_corrections(
         notes=notes,
@@ -198,14 +198,8 @@ def main() -> None:
         model=args.model,
     )
 
-    # Save corrections if requested
-    if args.save_corrections:
-        save_path = Path(args.save_corrections)
-        save_path.write_text(
-            json.dumps(corrections, indent=2, ensure_ascii=False),
-            encoding="utf-8",
-        )
-        print(f"Corrections saved to: {save_path}")
+    # Auto-save corrections (latest + timestamped archive)
+    save_corrections(corrections, ts)
 
     # Build HTML
     html_content = build_html(corrections, title=args.title)
