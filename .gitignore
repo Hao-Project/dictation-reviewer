@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.pyo
+.cache/
+*.html
+!sample_*.html
+.env
