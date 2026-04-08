@@ -514,11 +514,19 @@ function renderCards() {
       {key: 'polish', label: 'Polish', text: item.polish},
     ];
 
+    const diffBases = {
+      original: null,
+      minimal: item.original,
+      light: item.minimal,
+      polish: item.light,
+    };
+
     const optionsHtml = options.map(opt => {
       const isSelected = item.selected === opt.key;
-      const diffHtml = opt.key === 'original'
+      const base = diffBases[opt.key];
+      const diffHtml = base === null
         ? escapeHtml(opt.text)
-        : diffWords(item.original, opt.text);
+        : diffWords(base, opt.text);
       return `
         <label class="option ${isSelected ? 'selected' : ''}" onclick="selectOption(${i}, '${opt.key}')">
           <input type="radio" name="opt${i}" ${isSelected ? 'checked' : ''} ${item.confirmed ? 'disabled' : ''}>
