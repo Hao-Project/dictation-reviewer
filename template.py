@@ -298,6 +298,17 @@ blockquote {
 
 .option-text { font-size: 0.9rem; flex: 1; }
 
+.option.change { padding-left: 2rem; }
+.section-title {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  margin: 0.25rem 0 0.35rem;
+}
+
 .diff-add {
   background: var(--green-bg);
   color: var(--green);
@@ -514,25 +525,23 @@ function renderCards() {
       {key: 'polish', label: 'Polish', text: item.polish},
     ];
 
-    const diffBases = {
-      original: null,
-      minimal: item.original,
-      light: item.minimal,
-      polish: item.light,
-    };
-
-    const optionsHtml = options.map(opt => {
+    const completeHtml = options.map(opt => {
       const isSelected = item.selected === opt.key;
-      const base = diffBases[opt.key];
-      const diffHtml = base === null
-        ? escapeHtml(opt.text)
-        : diffWords(base, opt.text);
       return `
         <label class="option ${isSelected ? 'selected' : ''}" onclick="selectOption(${i}, '${opt.key}')">
           <input type="radio" name="opt${i}" ${isSelected ? 'checked' : ''} ${item.confirmed ? 'disabled' : ''}>
           <span class="option-label">${opt.label}</span>
-          <span class="option-text">${diffHtml}</span>
+          <span class="option-text">${escapeHtml(opt.text)}</span>
         </label>`;
+    }).join('');
+
+    const changesHtml = options.filter(opt => opt.key !== 'original').map(opt => {
+      const isSelected = item.selected === opt.key;
+      return `
+        <div class="option change ${isSelected ? 'selected' : ''}" onclick="selectOption(${i}, '${opt.key}')">
+          <span class="option-label">${opt.label}</span>
+          <span class="option-text">${diffWords(item.original, opt.text)}</span>
+        </div>`;
     }).join('');
 
     const editHtml = item.editing ? `
@@ -546,7 +555,14 @@ function renderCards() {
           <span class="card-status">${item.confirmed ? '✓ Confirmed' : 'Pending'}</span>
         </div>
         <blockquote>${escapeHtml(item.original)}</blockquote>
-        <div class="options">${optionsHtml}</div>
+        <div class="options">
+          <div class="section-title">Complete versions</div>
+          ${completeHtml}
+        </div>
+        <div class="options">
+          <div class="section-title">Changes vs. original</div>
+          ${changesHtml}
+        </div>
         <button class="edit-toggle" onclick="toggleEdit(${i})" ${item.confirmed ? 'disabled' : ''}>
           ${item.editing ? 'Close editor' : '✏️ Edit manually'}
         </button>

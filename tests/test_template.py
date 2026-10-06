@@ -82,3 +82,10 @@ def test_corrections_json_embedded():
     html = build_html(SAMPLE_CORRECTIONS)
     # The corrections should be valid JSON embedded in the page
     assert "CORRECTIONS" in html
+
+
+def test_build_html_shows_complete_and_diff_versions():
+    html = build_html(SAMPLE_CORRECTIONS)
+    assert "Complete versions" in html
+    assert "Changes vs. original" in html
+    assert "diffWords(item.original, opt.text)" in html
