@@ -3,8 +3,8 @@
 from datetime import datetime
 from pathlib import Path
 
-# Default output directory
-DEFAULT_OUTPUT_DIR = Path.cwd()
+# Default output directory for generated review pages
+DEFAULT_OUTPUT_DIR = Path(__file__).parent / "reviews"
 
 # Custom dictionary path
 CUSTOM_DICTIONARY_PATH = Path(__file__).parent / "custom_dictionary.json"

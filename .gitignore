@@ -3,8 +3,10 @@ __pycache__/
 *.pyc
 *.pyo
 .cache/
+reviews/
 *.html
-!sample_*.html
+!sample_reviews/
+*.html
 .env
 notes/
 corrections/
