@@ -298,6 +298,17 @@ blockquote {
 
 .option-text { font-size: 0.9rem; flex: 1; }
 
+.version { margin-bottom: 0.4rem; }
+.version-tag {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  margin-bottom: 0.1rem;
+}
+
 .diff-add {
   background: var(--green-bg);
   color: var(--green);
@@ -514,24 +525,23 @@ function renderCards() {
       {key: 'polish', label: 'Polish', text: item.polish},
     ];
 
-    const diffBases = {
-      original: null,
-      minimal: item.original,
-      light: item.minimal,
-      polish: item.light,
-    };
-
     const optionsHtml = options.map(opt => {
       const isSelected = item.selected === opt.key;
-      const base = diffBases[opt.key];
-      const diffHtml = base === null
-        ? escapeHtml(opt.text)
-        : diffWords(base, opt.text);
+      const versionsHtml = opt.key === 'original'
+        ? `<div class="version-text">${escapeHtml(opt.text)}</div>`
+        : `<div class="version">
+             <span class="version-tag">Complete</span>
+             <div class="version-text">${escapeHtml(opt.text)}</div>
+           </div>
+           <div class="version">
+             <span class="version-tag">Changes vs. original</span>
+             <div class="version-text">${diffWords(item.original, opt.text)}</div>
+           </div>`;
       return `
         <label class="option ${isSelected ? 'selected' : ''}" onclick="selectOption(${i}, '${opt.key}')">
           <input type="radio" name="opt${i}" ${isSelected ? 'checked' : ''} ${item.confirmed ? 'disabled' : ''}>
           <span class="option-label">${opt.label}</span>
-          <span class="option-text">${diffHtml}</span>
+          <span class="option-text">${versionsHtml}</span>
         </label>`;
     }).join('');
 
