@@ -46,7 +46,7 @@ def build_html(corrections: list[dict], title: str = "Dictation Review") -> str:
       <button onclick="batchSelect('polish')">Polish</button>
     </div>
     <div class="keyboard-hint">
-      Keyboard: <kbd>1</kbd>-<kbd>4</kbd> select · <kbd>E</kbd> edit · <kbd>Enter</kbd> confirm · <kbd>↑↓</kbd> navigate
+      Keyboard: <kbd>1</kbd>-<kbd>5</kbd> select · <kbd>E</kbd> edit · <kbd>Enter</kbd> confirm · <kbd>↑↓</kbd> navigate
     </div>
   </header>
 
@@ -283,6 +283,9 @@ blockquote {
 
 .option:hover { background: var(--progress-bg); }
 .option.selected { background: rgba(0, 113, 227, 0.08); }
+.option.delete .option-text { color: var(--red); }
+.option.delete.selected { background: var(--red-bg); }
+.card.confirmed .card-status.deleted { color: var(--red); }
 
 .option input[type="radio"] {
   margin-top: 0.3rem;
@@ -458,7 +461,7 @@ let state = {
     minimal: c.minimal,
     light: c.light,
     polish: c.polish,
-    selected: null,    // 'original' | 'minimal' | 'light' | 'polish'
+    selected: null,    // 'original' | 'minimal' | 'light' | 'polish' | 'delete'
     editText: '',
     editing: false,
     confirmed: false,
@@ -535,6 +538,14 @@ function renderCards() {
         </label>`;
     }).join('');
 
+    const deleteSelected = item.selected === 'delete';
+    const deleteHtml = `
+        <label class="option delete ${deleteSelected ? 'selected' : ''}" onclick="selectOption(${i}, 'delete')">
+          <input type="radio" name="opt${i}" ${deleteSelected ? 'checked' : ''} ${item.confirmed ? 'disabled' : ''}>
+          <span class="option-label">Delete</span>
+          <span class="option-text">Delete this entry (leave it out of the final notes)</span>
+        </label>`;
+
     const changesHtml = options.filter(opt => opt.key !== 'original').map(opt => {
       const isSelected = item.selected === opt.key;
       return `
@@ -552,12 +563,13 @@ function renderCards() {
       <div class="${classes.join(' ')}" id="card${i}" data-index="${i}" onclick="setActive(${i})">
         <div class="card-header">
           <span class="card-number">#${i + 1}</span>
-          <span class="card-status">${item.confirmed ? '✓ Confirmed' : 'Pending'}</span>
+          <span class="card-status">${item.confirmed ? (item.selected === 'delete' ? '✓ Deleted' : '✓ Confirmed') : 'Pending'}</span>
         </div>
         <blockquote>${escapeHtml(item.original)}</blockquote>
         <div class="options">
           <div class="section-title">Complete versions</div>
           ${completeHtml}
+          ${deleteHtml}
         </div>
         <div class="options">
           <div class="section-title">Changes vs. original</div>
@@ -600,7 +612,7 @@ function setActive(i) {
 function selectOption(i, key) {
   if (state.items[i].confirmed) return;
   state.items[i].selected = key;
-  state.items[i].editText = state.items[i][key];
+  state.items[i].editText = key === 'delete' ? '' : state.items[i][key];
   saveState();
   renderCards();
 }
@@ -608,7 +620,7 @@ function selectOption(i, key) {
 function toggleEdit(i) {
   if (state.items[i].confirmed) return;
   state.items[i].editing = !state.items[i].editing;
-  if (state.items[i].editing && !state.items[i].editText && state.items[i].selected) {
+  if (state.items[i].editing && !state.items[i].editText && state.items[i].selected && state.items[i].selected !== 'delete') {
     state.items[i].editText = state.items[i][state.items[i].selected];
   }
   saveState();
@@ -639,7 +651,7 @@ function confirmCard(i) {
 
 function batchSelect(key) {
   state.items.forEach(item => {
-    if (!item.confirmed) {
+    if (!item.confirmed && !isDeleted(item)) {
       item.selected = key;
       item.editText = item[key];
     }
@@ -668,14 +680,19 @@ function checkAllDone() {
   }
 }
 
+function isDeleted(item) {
+  return item.selected === 'delete';
+}
+
 function getFinalText(item) {
   if (item.editing && item.editText) return item.editText;
   return item[item.selected] || item.original;
 }
 
 function generateMarkdown() {
-  const revised = state.items.map(it => getFinalText(it)).join('\n\n');
-  const originals = state.items.map(it => it.original).join('\n\n');
+  const kept = state.items.filter(it => !isDeleted(it));
+  const revised = kept.map(it => getFinalText(it)).join('\n\n');
+  const originals = kept.map(it => it.original).join('\n\n');
   return `# Daily Notes — ${DATE_STR}\n\n---\n\n## Revised\n\n${revised}\n\n---\n\n## Original\n\n${originals}\n`;
 }
 
@@ -762,6 +779,7 @@ document.addEventListener('keydown', (e) => {
     case '2': selectOption(i, 'minimal'); e.preventDefault(); break;
     case '3': selectOption(i, 'light'); e.preventDefault(); break;
     case '4': selectOption(i, 'polish'); e.preventDefault(); break;
+    case '5': selectOption(i, 'delete'); e.preventDefault(); break;
     case 'e':
     case 'E': toggleEdit(i); e.preventDefault(); break;
     case 'Enter': confirmCard(i); e.preventDefault(); break;

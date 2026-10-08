@@ -89,3 +89,10 @@ def test_build_html_shows_complete_and_diff_versions():
     assert "Complete versions" in html
     assert "Changes vs. original" in html
     assert "diffWords(item.original, opt.text)" in html
+
+
+def test_build_html_has_delete_option():
+    html = build_html(SAMPLE_CORRECTIONS)
+    assert "Delete this entry" in html
+    assert "selectOption(${i}, 'delete')" in html
+    assert "kept = state.items.filter(it => !isDeleted(it))" in html
