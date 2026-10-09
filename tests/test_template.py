@@ -96,3 +96,9 @@ def test_build_html_has_delete_option():
     assert "Delete this entry" in html
     assert "selectOption(${i}, 'delete')" in html
     assert "kept = state.items.filter(it => !isDeleted(it))" in html
+
+
+def test_build_html_has_unconfirm():
+    html = build_html(SAMPLE_CORRECTIONS)
+    assert "function unconfirmCard" in html
+    assert "Unconfirm" in html

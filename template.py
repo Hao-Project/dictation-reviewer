@@ -46,7 +46,7 @@ def build_html(corrections: list[dict], title: str = "Dictation Review") -> str:
       <button onclick="batchSelect('polish')">Polish</button>
     </div>
     <div class="keyboard-hint">
-      Keyboard: <kbd>1</kbd>-<kbd>5</kbd> select · <kbd>E</kbd> edit · <kbd>Enter</kbd> confirm · <kbd>↑↓</kbd> navigate
+      Keyboard: <kbd>1</kbd>-<kbd>5</kbd> select · <kbd>E</kbd> edit · <kbd>Enter</kbd> confirm · <kbd>U</kbd> unconfirm · <kbd>↑↓</kbd> navigate
     </div>
   </header>
 
@@ -370,6 +370,16 @@ blockquote {
 
 .confirm-btn:hover { background: var(--accent-hover); }
 .confirm-btn:disabled { opacity: 0.5; cursor: default; }
+.unconfirm-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary, inherit);
+  padding: 0.4rem 1.2rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.unconfirm-btn:hover { border-color: var(--accent); color: var(--accent); }
 
 .output-section {
   max-width: 800px;
@@ -580,11 +590,9 @@ function renderCards() {
         </button>
         ${editHtml}
         <div class="card-actions">
-          <button class="confirm-btn" onclick="confirmCard(${i})"
-            ${item.confirmed ? 'disabled' : ''}
-            ${!item.selected ? 'disabled' : ''}>
-            ${item.confirmed ? 'Confirmed' : 'Confirm'}
-          </button>
+          ${item.confirmed
+            ? `<button class="unconfirm-btn" onclick="event.stopPropagation(); unconfirmCard(${i})">Unconfirm</button>`
+            : `<button class="confirm-btn" onclick="confirmCard(${i})" ${!item.selected ? 'disabled' : ''}>Confirm</button>`}
         </div>
       </div>`;
   }).join('');
@@ -647,6 +655,14 @@ function confirmCard(i) {
     setActive(next);
     document.getElementById('card' + next)?.scrollIntoView({behavior: 'smooth', block: 'center'});
   }
+}
+
+function unconfirmCard(i) {
+  if (!state.items[i].confirmed) return;
+  state.items[i].confirmed = false;
+  saveState();
+  renderCards();
+  setActive(i);
 }
 
 function batchSelect(key) {
@@ -783,6 +799,8 @@ document.addEventListener('keydown', (e) => {
     case 'e':
     case 'E': toggleEdit(i); e.preventDefault(); break;
     case 'Enter': confirmCard(i); e.preventDefault(); break;
+    case 'u':
+    case 'U': unconfirmCard(i); e.preventDefault(); break;
     case 'ArrowDown':
       if (i < state.items.length - 1) {
         setActive(i + 1);
